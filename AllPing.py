@@ -62,7 +62,7 @@ async def on_message(message):                              ##
 ##   Is person sends a valid URL, it will be pinged,        ##
 ##   by the following function;                             ##
 async def ping(msg):                                        ##
-    channel = client.get_channel(679120190658576420)        ##
+    channel = client.get_channel(xxxxxxxxxxxxxxxxxx)        ##
     print(msg)                                              ##
     response = os.system("ping -c 1 " + msg)                ##
     if response == 0:
@@ -74,7 +74,7 @@ async def ping(msg):                                        ##
 ##############################################################
 
 async def default_ping_display(hostname):
-    channel = client.get_channel(679120190658576420)
+    channel = client.get_channel(xxxxxxxxxxxxxxxxxxxxx)
     await channel.send(f"Time is: {x.tm_hour}:{x.tm_min}:{x.tm_sec}\nHost: '{hostname}' is down.\nPlease check ASAP.")
     await asyncio.sleep(10)
 
