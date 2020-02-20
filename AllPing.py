@@ -25,6 +25,7 @@ ping_status = "google.com"
 ##        On startup send a message to terminal.          ##
 @client.event                                             ##
 async def on_ready():                                     ##
+    channel = client.get_channel(xxxxxxxxxxxxxxxxxx)
     print('We have logged in as {0.user}'.format(client)) ##
     await channel.send("Usage;\n    $ping [url]   :   Ping a url of your choice\n    $favourite_ping    :   Ping your favourite URL periodically.\n    $helper    :   Display a list of usable commands, and what they do.")
 ############################################################
