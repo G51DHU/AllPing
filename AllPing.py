@@ -49,8 +49,7 @@ async def on_message(message):                              ##
             elif msg == "help" or msg == "h" or msg == "-h":
                 await channel.send("Usage; \n   'ping [url]'\n   replace url with, 'default' or 'home' to ping home router.")
             elif msg == "start_ping_check":
-                default_ping_loop_thread = threading.Thread(target= default_ping)
-                default_ping_loop_thread.start()
+                client.loop.create_task(default_ping())
             else:                                           ##
                 print(msg)                                  ##
                 await ping(msg)                             ##
@@ -74,22 +73,20 @@ async def ping(msg):                                        ##
 ##############################################################
 
 async def default_ping_display(hostname):
-    channel = client.get_channel(xxxxxxxxxxxxxxxxxxxxx)
+    channel = client.get_channel(xxxxxxxxxxxxxxxxxx)
     await channel.send(f"Time is: {x.tm_hour}:{x.tm_min}:{x.tm_sec}\nHost: '{hostname}' is down.\nPlease check ASAP.")
     await asyncio.sleep(10)
 
 ##############################################################
 ##        Pings the favourite URL, periodically             ##
 ##        to check if it is alive.                          ##
-def default_ping():                                         ## 
+async def default_ping():                                   ## 
     while True:                                             ## 
         hostname = "xxxxxxxxxxxxxxxxxxxxxxxx"               ##
         response = os.system("ping -c 1 " + hostname)       ##
         if response == 0:                                   ##Currently inverted
-            loop = asyncio.get_event_loop()                 ##
-            loop.run_until_complete(default_ping_display(hostname))
-            loop.close()
-        time.sleep(10)
+            await default_ping_display(hostname)
+        await asyncio.sleep(10)
 ##############################################################
 
 ##############################################################################
