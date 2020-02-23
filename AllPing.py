@@ -28,7 +28,7 @@ with open(r'config.yml') as file:
         else:
             variables.append(doc)
             count = count + 1
-if count == 6:
+if count == 7:
     command_prefix = variables[0]
     #
     ping_shortcut = variables[1]
@@ -42,13 +42,7 @@ if count == 6:
     const_ping_channel = variables[3]
     const_ping_hostname =  variables[4]
     bot_token = variables[5]
-    #
-    print(command_prefix)
-    print(const_ping_channel)
-    print(ping_shortcut_1)
-    print(ping_shortcut_2)
-    print(shortcut_hostname)
-    print(bot_token)
+    on_ready_channel = variables[6]
 
 #######################
 ##      Variables    ##
@@ -72,7 +66,7 @@ client.remove_command("help")
 ##       and send list of usable commands to user.        ##
 @client.event                                             ##
 async def on_ready():                                     ##
-    ctx = client.get_channel(xxxxxxxxxxxxxxxxxxxx)        ##
+    ctx = client.get_channel(int(on_ready_channel))       ##
     print('We have logged in as {0.user}'.format(client)) ##
     await info(ctx)                                       ##
 ##                                                        ##
