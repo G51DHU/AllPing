@@ -187,15 +187,15 @@ async def const_ping_handler():                             ##
 ##                                                          ##
 ##              Stop that constant pinging                  ##
 ##                                                          ##
-@client.command()
-async def const_ping_stop(ctx):                             ##        
-    embed = discord.Embed(
-        title = "const_ping",
-        description = "Const_ping has been stopped.",
-        colour = discord.Colour.greyple()
-    )
-    ##Currently does not work
-    await ctx.send(embed = embed)
+#@client.command()
+#async def const_ping_stop(ctx):                             ##        
+#    embed = discord.Embed(
+#        title = "const_ping",
+#        description = "Const_ping has been stopped.",
+#        colour = discord.Colour.greyple()
+#    )
+#    ##Currently does not work
+#    await ctx.send(embed = embed)
 ##############################################################
 
 ###############################
