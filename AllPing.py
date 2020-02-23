@@ -48,6 +48,7 @@ if count == 6:
     print(ping_shortcut_1)
     print(ping_shortcut_2)
     print(shortcut_hostname)
+    print(bot_token)
 
 #######################
 ##      Variables    ##
