@@ -27,7 +27,7 @@ const_ping_hostname:
   - google.com
 
 bot_token:
-  - "Njc5MDE0MzUyMDE5NTIxNTQ2.XkrNGA.lnHYHLd4HGmol3Zdxo1KhlRVAtY"
+  - Njc5MDE0MzUyMDE5NTIxNTQ2.XlbdrQ.TxneRv8lFRYs1wQdtcBilZmMr1g
 
 on_ready_channel:
   - "679138745210896395"
