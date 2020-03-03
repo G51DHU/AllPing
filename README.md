@@ -6,7 +6,7 @@ Current ability of AllPing;
      Ping URL
      Choose a favourite URL, that can be pinged by the use of short term word such as “home" or "default".
   
-In order to use the bot, please change the token, and equip it with that of your own discord bot, and replace your "favourite" URL to a URL you would want to ping regularly.
+In order to use the bot, in the config file, please change the BOT TOKEN, and CHANNEL ID's to the appropriate ones. Any other changes are optional.
 
 This little project, was intended to be able to "ping" my raspberry pi device which ran Dietpi. But realised ICMP does not affect TCP, therefore went ahead with the little venture, and decided to create a multi-functioning bot, as my second attempt at a project.
 
