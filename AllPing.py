@@ -7,52 +7,36 @@ import time
 import os
 import asyncio
 import datetime
-import yaml
+import json
 
 ###################################
 ##     primary initialisation    ##
 ###################################
 
 # Reads the config.yml file, and sets variables.
-count = 0
-variables = []
-with open(r'config.yml') as file:
-    documents = yaml.safe_load(file)
-    for item, doc in documents.items():
-        doc = str(doc)
-        doc = doc[:-2]
-        doc = doc[2:]
-        if doc == "on":
-            print("You have a missing value. Please check the config file.")
-            exit()
-        else:
-            variables.append(doc)
-            count = count + 1
-if count == 7:
-    command_prefix = variables[0]
-    #
-    ping_shortcut = variables[1]
-    ping_shortcut = ping_shortcut.split(",")
-    ping_shortcut_1 = ping_shortcut[0]
-    ping_shortcut_1 = ping_shortcut_1[:-1]
-    ping_shortcut_2 = ping_shortcut[1]
-    ping_shortcut_2 = ping_shortcut_2[2:]
-    #
-    shortcut_hostname = variables[2]
-    const_ping_channel = variables[3]
-    const_ping_hostname =  variables[4]
-    bot_token = variables[5]
-    on_ready_channel = variables[6]
+
+with open('Allping/config.json') as f:
+    data = json.load(f)
+
+command_prefix = data["command_prefix"]
+shortcut_names = data["shortcut_names"]
+ping_shortcut_1 = shortcut_names[0]
+ping_shortcut_2 =  shortcut_names[1]
+shortcut_hostname = data["shortcut_hostname"]
+const_ping_channel = data["const_ping_channel"]
+const_ping_hostname = data["const_ping_hostname"]
+bot_token = data["bot_token"]
+on_ready_channel = data["on_ready_channel"]
+
 
 #######################
 ##      Variables    ##
 #######################
 
-client = commands.Bot(command_prefix=command_prefix)
-
 #####################################
 ##     secondary initialisation    ##
 #####################################
+client = commands.Bot(command_prefix=command_prefix)
 client.remove_command("help")
 
 ################################
@@ -77,7 +61,7 @@ async def info(ctx):                                      ##
     member = await client.fetch_user(679014352019521546)  ##
     embed = discord.Embed(
         title = "Allping",
-        description =f"Hello! I'm a bot called 'AllPing'. I can do cool network admin things like, pinging, viewing domain status, checking host downtime and ssh.\n\n`Creator` : Linux_Is_Nobody#3940\n`My name` : {member.mention}\n`Version` : This is version V3.7 alpha",
+        description =f"Hello! I'm a bot called 'AllPing'. I can do cool network admin things like, pinging, viewing domain status, checking host downtime and ssh.\n\n`Creator` : Linux_Is_Nobody#3940\n`My name` : {member.mention}\n`My prefix` : {command_prefix}\n`Version` : This is version V3.7 alpha",
         colour = discord.Colour.blue(),
         timestamp=datetime.datetime.utcnow()
     )                                                     ##
@@ -141,7 +125,6 @@ async def ping_handler(ctx, hostname):                      ##
             colour = discord.Colour.greyple()
         )                                                   ##
         await ctx.send(embed = embed)                       ##
-        await asyncio.sleep(0.01)                           ##
     else:                                                   ##
         x = time.localtime()                                ##
         embed = discord.Embed(
@@ -197,6 +180,112 @@ async def const_ping_handler():                             ##
 #    ##Currently does not work
 #    await ctx.send(embed = embed)
 ##############################################################
+
+##############################################################
+@client.command()
+async def settings(ctx, *args):
+    global command_prefix
+    global const_ping_channel
+    global const_ping_hostname
+    if len(args) == 0:
+        await ctx.send("Please enter a command.")
+    elif args[0] == "help":
+        await ctx.send("These are the commands you can use")
+    elif args[0] == "command_prefix":
+        if len(args) == 1 or len(args) >=3:
+            await ctx.send("Please enter a new prefix.")
+        elif len(args) == 2:
+            await ctx.send(f"{command_prefix} is your current prefix.\nAre you sure you want {args[1]} as your new prefix?\n`yes` or `no`.")
+            msg = await client.wait_for('message',timeout=10)
+            if msg.content == "yes":
+                await ctx.send("Prefix has been changed.")
+                settings_edit("command_prefix", args[1])
+            elif msg.content != "yes":
+                await ctx.send("Cancelled")
+    elif args[0] == "const_ping_channel":
+        if len(args) == 1 or len(args) >=3:
+            await ctx.send("Please enter a new channel ID to send downtime alerts too.")
+        elif len(args) == 2:
+            await ctx.send(f"{const_ping_channel} is the current channel, downtime alerts are being sent too.\n Are you sure you want {args[1]} as your new channel to ping?\n`yes` or `no`.")
+            msg = await client.wait_for('message',timeout=10)
+            if msg.content == "yes":
+                await ctx.send("Downtime alert channel, has been changed.")
+                settings_edit("const_ping_channel", args[1])
+            elif msg.content != "yes":
+                await ctx.send("Cancelled")
+    elif args[0] == "const_ping_hostname":
+        if len(args) == 1 or len(args) >=3:
+            await ctx.send("Please enter a new host name to check downtime for.")
+        elif len(args) == 2:
+            await ctx.send(f"{const_ping_hostname} is the current hostname that is checked for downtime. Are you sure you want {args[1]} as your new hostname to check?\n`yes` or `no`.")
+            msg = await client.wait_for('message',timeout=10)
+            if msg.content == "yes":
+                await ctx.send("Hostname, that is checked for downtime, has been changed.")
+                settings_edit("const_ping_hostname", args[1])
+            elif msg.content != "yes":
+                await ctx.send("Cancelled")
+    elif args[0] == "shortcut_names":
+        if len(args) == 1 or len(args) >=3:
+            await ctx.send(f"Do you want to add or edit current shortcuts?\n`{command_prefix}shortcut_names 1` for add.\n`{command_prefix}shortcut_names 2` for edit.")
+
+        elif len(args) == 2 and  args[1] == "1": 
+
+            title = "Settings\nshortcut_names"
+            description = f"Please enter a new hostname to add without the bot prefix.\nPlease do not enter anything else, except the hostname.\nPlease make sure you are following these templates;\n      ?ping example.com\n      ?ping www.example.com\n      ?ping 127.0.0.1"
+            discord_embed_send(ctx, title, description)
+
+            msg = await client.wait_for('message',timeout=10)
+
+            title = "Settings\nshortcut_names\nadd"
+            description = f"Are you sure you want {msg.content} as your new hostname?\n`1` for yes.\n`2` for no."
+            discord_embed_send(ctx, title, description)
+
+            msg = await client.wait_for('message',timeout=10)
+
+            if msg.content == "1":
+                title = "Settings\nshortcut_names\nadd"
+                description = "Hostname, that is checked for downtime, has been changed."
+                discord_embed_send(ctx, title, description)
+                settings_edit("shortcut_names", args[2])
+
+            elif msg.content != "1":
+                title = "Settings\nshortcut_names\nadd",
+                description = "Cancelled",
+                discord_embed_send(ctx, title, description)
+
+        elif len(args) == 2 and  args[1] == "2":
+            ctx.send("Please enter a new hostname to add.")
+            msg = await client.wait_for('message',timeout=10)
+            await ctx.send(f"Are you sure you want {msg.content} as your new hostname?\n`1` for yes.\n`2` for no.")
+            msg = await client.wait_for('message',timeout=10)
+            if msg.content == "1":
+                await ctx.send("Hostname, that is checked for downtime, has been changed.")
+                settings_edit("const_ping_hostname", args[1])
+            elif msg.content != "1":
+                await ctx.send("Cancelled")
+
+async def discord_embed_send(ctx, title, description):
+    embed = discord.Embed(
+        title = title,
+        description = description,
+        colour = discord.Colour.greyple()
+        )
+    await ctx.send(embed = embed)
+
+
+## shortcut_names
+def settings_edit(variable_name, value):
+    with open('Allping/config.json', 'r+') as f:
+        data = json.load(f)
+        data[variable_name] = value # <--- add `id` value.
+        f.seek(0)        # <--- should reset file position to the beginning.
+        json.dump(data, f, indent=4)
+        f.truncate()
+##############################################################
+
+
+    
+
 
 ###############################
 ##      Discord bot token.   ## 
