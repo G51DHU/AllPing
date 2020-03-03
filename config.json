@@ -1,0 +1,24 @@
+{
+    "Important info": [
+        "Configuration file for the AnyPing discord bot.",
+        "Please enter a valid config, otherwise upon the bot joining your server, you will recieve an error."
+    ],
+    "Note;": [
+        "Please do not under any circumstance use the word 'on' for any config, the bot will fail to initialise.",
+        "Do not change the title of any variable whatsoever.",
+        "Max shortcut names you can have are two.",
+        "Please do not try too add any more values, to any category, or else the bot will fail to initialise.",
+        "You can only change what is not in blue.",
+        "Make sure to add 1 spech mark on either side of the channel id."
+    ],
+    "command_prefix": "?",
+    "shortcut_names": [
+        "1",
+        "2"
+    ],
+    "shortcut_hostname": "google.com",
+    "const_ping_channel": "679138745210896395",
+    "const_ping_hostname": "google.com",
+    "bot_token": "Njc5MDE0MzUyMDE5NTIxNTQ2.XlpdQw.3rrHdw4KGCl6hbY1uX8FQavzFOM",
+    "on_ready_channel": "679138745210896395"
+}
