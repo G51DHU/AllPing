@@ -68,7 +68,7 @@ async def info(ctx):                                      ##
     member = await client.fetch_user(679014352019521546)  ##
     embed = discord.Embed(
         title = "Allping",
-        description =f"Hello! I'm a bot called 'AllPing'. I can do cool network admin things like, pinging, viewing domain status, checking host downtime and ssh.\n\n`Creator` : Linux_Is_Nobody#3940\n`My name` : {member.mention}\n`My prefix` : {command_prefix}\n`Version` : This is version V3.7 alpha",
+        description =f"Hello! I'm a bot called 'AllPing'. I can do cool network admin things like, pinging, viewing domain status, checking host downtime and ssh.\n\n`Creator` : Linux_Is_Nobody#3940\n`My name` : {member.mention}\n`My prefix` : {command_prefix}\n`Version` : This is version V3.75 alpha",
         colour = discord.Colour.blue(),
         timestamp=datetime.datetime.utcnow()
     )                                                     ##
@@ -148,14 +148,14 @@ async def ping_handler(ctx, hostname):                      ##
 ##############################################################
 ##        Calls "constant_ping_handler()".                  ##
 @client.command()                                           ##
-async def downtime (ctx):                                 ##
+async def downtime (ctx):                                   ##
     embed = discord.Embed(                                  
         title = "Downtime checks",
         description = "Initiated.",
         colour = discord.Colour.greyple()
     )
     await ctx.send(embed = embed)                           ##
-    client.loop.create_task(downtime_handler())
+    client.loop.create_task(downtime_handler())             ##
     await asyncio.sleep(0.01)                               ##
 ##                                                          ##
 ##        Pings the favourite URL, periodically             ##
@@ -192,63 +192,94 @@ async def downtime_handler():                               ##
 ##############################################################
 
 ##############################################################
-
-@client.command()
-async def settings(ctx, *args):
-    global command_prefix
-    global downtime_channel
-    global downtime_hostname
-    global shortcut_hostnames
-    if len(args) == 0:
-        await ctx.send("Please enter a command.")
-    elif args[0] == "help":
-        await ctx.send(f"These are the commands you can use;\n   `{command_prefix}settings prefix [new prefix]' : Change the current bot prefix.\n   `{command_prefix}")
-#cleaned
+##                                                          ##
+@client.command()                                           ##
+async def settings(ctx, *args):                             ##
+    global command_prefix                                   ##
+    global downtime_channel                                 ##
+    global downtime_hostname                                ##
+    global shortcut_hostnames                               ##
+    if len(args) == 0:                                      ##
+        title = "Please enter a valid command"              ##
+        description = ""                                    ##
+        await discord_embed_send(ctx, title, description)   ##
+        await settings_help(ctx)                            ##
+    elif args[0] == "help":                                 ##
+        await settings_help(ctx)                            ##
+##                                                          ##
+##                                                          ##
     elif args[0] == "prefix" or args[0] == "1":
         if len(args) == 1:
-            await ctx.send("Please enter a new prefix.")
+            title = "Enter a new prefix"
+            description = "Preferably keep the prefix to a symbol, so that it's easier to remember."
+            await discord_embed_send(ctx, title, description)
             new_prefix_wait = await client.wait_for('message',timeout=10)
             new_prefix = new_prefix_wait.content.lower()
-            await ctx.send(f"{command_prefix} is your current prefix.\nAre you sure you want {new_prefix} as your new prefix?\n   `yes` or `no`.")
+            title = "Confirm"
+            description = f"`{command_prefix}` is your current prefix.\nAre you sure you want `{new_prefix}` as your new prefix?\n   `yes` or `no`."
+            await discord_embed_send(ctx, title, description)
             ynconfirm = await client.wait_for('message',timeout=10)
             if ynconfirm.content == "yes":
-                await ctx.send("Prefix has been changed.")
-                settings_edit("command_prefix", new_prefix)
+                title = "Confirmed"
+                description = "Prefix has been changed."
+                await discord_embed_send(ctx, title, description)
+                settings_edit("command_prefix", new_prefix) 
             elif ynconfirm.content != "yes":
-                await ctx.send("Cancelled")
-
-#
+                title = "Cancelled"
+                description = f"`{new_prefix}` has not been added."
+                await discord_embed_send(ctx, title, description)
+##                                                          ##
+##                                                          ##
     elif args[0] == "downtime_channel" or args[0] == "2":
         if len(args) == 1:
-            await ctx.send("Please enter the channel you'd like downtime alerts to be sent to.")
+            title = "Enter a new channel"
+            description = "Please enter the channel you'd like downtime alerts to be sent to."
+            await discord_embed_send(ctx, title, description)
             new_downtime_channel = await client.wait_for('message',timeout=10)
-            await ctx.send(f"{downtime_channel} is the current channel, downtime alerts are being sent too.\n Are you sure you want {new_downtime_channel} as your new channel to ping?\n   `yes` or `no`.")
+            new_downtime_channel = new_downtime_channel.content
+            title = "Confirm"
+            description = f"`{downtime_channel}` is the current channel, downtime alerts are being sent too.\n Are you sure you want `{new_downtime_channel}` as your new channel to ping?\n   `yes` or `no`."
+            await discord_embed_send(ctx, title, description)
             ynconfirm = await client.wait_for('message',timeout=10)
             ynconfirm = ynconfirm.content.lower()
             if ynconfirm == "yes":
-                await ctx.send("Downtime alert channel, has been changed.")
+                title = "Confirmed"
+                description = "Downtime alert channel, has been changed."
+                await discord_embed_send(ctx, title, description)
                 settings_edit("downtime_channel", new_downtime_channel)
             elif ynconfirm != "yes":
-                await ctx.send("Cancelled")
-#
+                title = "Cancelled"
+                description = f"Downtime channel has not been changed too {downtime_channel}"
+                await discord_embed_send(ctx, title, description)
+##                                                          ##
+##                                                          ##
     elif args[0] == "downtime_hostname" or args[0] == "3":
         if len(args) == 1:
-            await ctx.send("Please enter the new hostname you want, checked for downtime.")
+            title = "Enter new downtime hostname"
+            description = f"Please make sure you are following these templates;\n      {command_prefix}ping example.com\n      {command_prefix}ping www.example.com\n      {command_prefix}ping 127.0.0.1"
+            discord_embed_send(ctx, title , description)
             new_downtime_hostname = await client.wait_for('message', timeout=10)
             new_downtime_channel = new_downtime_channel.content.lower()
-            await ctx.send(f"{downtime_hostname} is the current hostname that is checked for downtime. Are you sure you want {new_downtime_hostname} as your new hostname to check?\n   `yes` or `no`.")
+            title = "Confirm"
+            description = f"`{downtime_hostname}` is the current hostname that is checked for downtime. Are you sure you want `{new_downtime_hostname}` as your new hostname to check?\n   `yes` or `no`."
+            discord_embed_send(ctx, title, description)
             ynconfirm = await client.wait_for('message', timeout=10)
             ynconfirm = ynconfirm.content.lower()
             if ynconfirm == "yes":
-                await ctx.send("Hostname, that is checked for downtime, has been changed.")
+                title = "Confirmed"
+                description = "Hostname, that is checked for downtime, has been changed."
+                await discord_embed_send(ctx, title, description)
                 settings_edit("downtime_hostname", args[1])
             elif ynconfirm != "yes":
-                await ctx.send("Cancelled")
-#
+                title = "Cancelled"
+                description = f"Downtime hostname has not been changed to {new_downtime_channel}"
+                discord_embed_send(ctx, title, description)
+##                                                          ##
+##                                                          ##
     elif args[0] == "shortcut_names" or args[0] == "4":
         if len(args) == 1: 
             title = "Add or Edit shorcut names?"
-            description = f"These are your current shortcuts, for the `{command_prefix}ping` command.\n-     {shortcut_hostnames}\n-  Please note;\n  Each hostname, is numerically assigned a value, based on the order you have given them. Values from `0` onwards.\nDo you want to add a new hostname or edit a current one??\n-   Enter for `1` add or `2` for edit."
+            description = f"These are your current shortcuts, for the `{command_prefix}ping` command.\n     {shortcut_hostnames}\n-  Please note;\n  Each hostname, is numerically assigned a value, based on the order you have given them. Values from `0` onwards.\nDo you want to add a new hostname or edit a current one??\n   Enter for `1` add or `2` for edit."
             await discord_embed_send(ctx, title, description)
             ynconfirm = await client.wait_for('message', timeout=10)
             if ynconfirm.content == "1":
@@ -273,30 +304,79 @@ async def settings(ctx, *args):
                     title = "Cancelled"
                     description = f"{new_hostname} has not been added."
                     await discord_embed_send(ctx, title, description)
+            elif ynconfirm.content == "2":
+                title = "Choose shortcut"
+                description = f"These are your current shortcuts. Index positions starting from 0 onwards;\n`{shortcut_hostnames}`\nWhich shortcut do you wish to edit?"
+                await discord_embed_send(ctx, title, description)
+                index_choose = await client.wait_for('message', timeout =10)
+                index_choose = index_choose.content.lower()
+                index_choose = int(index_choose)
+                title = "Confirm"
+                description = f"Are you sure you want to edit, {shortcut_hostnames[index_choose]}?\n   `yes` or `no`"
+                await discord_embed_send(ctx, title, description)
+                ynconfirm = await client.wait_for('message', timeout =10)
+                ynconfirm = ynconfirm.content.lower()
+                if ynconfirm == "yes":
+                    title = "Confirm"
+                    description = f"Do you want to change or delete {shortcut_hostnames[index_choose]}?\n   Enter for `1` change or `2` for delete."
+                    await discord_embed_send(ctx, title, description)
+                    ynconfirm = await client.wait_for('message', timeout =10)
+                    ynconfirm = ynconfirm.content.lower()
+                    if ynconfirm == "1":
+                        title = "Enter new hostname"
+                        description = f"Please enter the new hostname.\n   Please make sure you are following these templates;\n      {command_prefix}ping example.com\n      {command_prefix}ping www.example.com\n      {command_prefix}ping 127.0.0.1"
+                        await discord_embed_send(ctx, title, description)
+                        new_hostname = await client.wait_for('message', timeout =10)
+                        new_hostname = new_hostname.content.lower()
+                        title = "Confirm"
+                        description = f"Are you sure you want {new_hostname} to be your new hostname?\n   `yes` or `no`"
+                        discord_embed_send(ctx, title, description)
+                        ynconfirm = await client.wait_for('message', timeout =10)
+                        ynconfirm = ynconfirm.content.lower()
+                        if ynconfirm == "yes":
+                            print(shortcut_hostnames)
+                            shortcut_hostnames[index_choose] = new_hostname
+                            print(shortcut_hostnames)
+                            settings_edit("shortcut_hostnames", shortcut_hostnames)
+                            title = "Confirmed"
+                            description = "Shorcut has been changed."
+                            await discord_embed_send(ctx, title, description)
+##############################################################
 
+##############################################################
+##                                                          ##
+##                                                          ##
+async def settings_help(ctx):                               ##
+    title = "Settings help"                                 ##
+    description = f"These are the commands you can use;\n   `{command_prefix}settings prefix [new prefix]' : Change the current bot prefix.\n   `{command_prefix}"
+    await discord_embed_send(ctx, title, description)       ##
+##############################################################
 
-async def discord_embed_send(ctx, title, description):
+##############################################################
+##                                                          ##
+##                                                          ##
+async def discord_embed_send(ctx, title, description):      ##
     embed = discord.Embed(
         title = title,
         description = description,
         colour = discord.Colour.greyple()
         )
-    await ctx.send(embed = embed)
-
-
-## shortcut_names
-def settings_edit(variable_name, value):
-    with open('config.json', 'r+') as f:
-        data = json.load(f)
-        data[variable_name] = value # <--- add `id` value.
-        f.seek(0)        # <--- should reset file position to the beginning.
-        json.dump(data, f, indent=4)
-        f.truncate()
+    await ctx.send(embed = embed)                           ##
 ##############################################################
 
+##############################################################
+##                                                          ##
+##                                                          ##
+def settings_edit(variable_name, value):                    ##
+    with open('config.json', 'r+') as f:                    ##
+        data = json.load(f)                                 ##
+        data[variable_name] = value # <--- add `id` value.
+        f.seek(0)        # <--- should reset file position to the beginning.
+        json.dump(data, f, indent=4)                        ##
+        f.truncate()                                        ##
+##############################################################
 
 ###############################
 ##      Discord bot token.   ## 
 client.run(bot_token)        ##
 ###############################
-
