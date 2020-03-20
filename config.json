@@ -5,9 +5,8 @@
     ],
     "Note;": [
         "Do not change the title of any variable whatsoever.",
-        "Max shortcut names you can have are two.",
         "You can only change what is not in blue.",
-        "Make sure to add speech marks.",
+        "Make sure to add speech marks. and commas, following the format of previous entries.",
         "Make sure that 'shortcut_hostnames' is an array, else you won't be able to edit within discord."
     ],
     "command_prefix": "!",
