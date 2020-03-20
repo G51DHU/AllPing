@@ -8,6 +8,7 @@ import os
 import asyncio
 import datetime
 import json
+import whois
 
 
 #######################
@@ -95,7 +96,6 @@ async def help(ctx):                                        ##
 ##                  Listens for "ping"                      ##
 @client.command()                                           ## 
 async def ping(ctx, *args):                                 ##
-    global shortcut_hostnames                               ##
     if len(args) == 0 or len(args) >=2:                     ##
         embed = discord.Embed(
             title = "Ping",
@@ -109,7 +109,7 @@ async def ping(ctx, *args):                                 ##
         print(hostname)                                     ##
         hostname = hostname.strip()                         ##
         hostname = hostname.lower()                         ##
-        if hostname in numbers:
+        if type(hostname) == int:
             if hostname in shortcut_list:
                 hostname_short = shortcut_hostnames[int(hostname)]
                 print(hostname)
@@ -146,14 +146,14 @@ async def ping_handler(ctx, hostname):                      ##
 ##############################################################
 
 ##############################################################
-##        Calls "constant_ping_handler()".                  ##
+##              Calls "downtime_handler()".                 ##
 @client.command()                                           ##
 async def downtime (ctx):                                   ##
     embed = discord.Embed(                                  
         title = "Downtime checks",
         description = "Initiated.",
         colour = discord.Colour.greyple()
-    )
+    )                                                       ##
     await ctx.send(embed = embed)                           ##
     client.loop.create_task(downtime_handler())             ##
     await asyncio.sleep(0.01)                               ##
@@ -162,14 +162,12 @@ async def downtime (ctx):                                   ##
 ##        to check if it is alive.                          ##
 ##                                                          ##
 async def downtime_handler():                               ##
-    global downtime_hostname                                ##
-    global downtime_channel                                 ##
     channel = client.get_channel(int(downtime_channel))     ##
     while True:                                             ## 
         hostname = downtime_hostname                        ## 
         response = os.system("ping -c 1 " + hostname)       ##
-        if response == 0:                                   ## ####   Currently inverted   ###
-            x = time.localtime()
+        if response != 0:                                   ##
+            x = time.localtime()                            ##
             embed = discord.Embed(
                 title = "const_ping",
                 description = f"Time is: {x.tm_hour}:{x.tm_min}\nHost: '{hostname}' is down.\nPlease check ASAP.",
@@ -189,6 +187,32 @@ async def downtime_handler():                               ##
 #    )
 #    ##Currently does not work
 #    await ctx.send(embed = embed)
+##############################################################
+
+##############################################################
+##       Display info about domains using WHOIS servers     ##
+##                                                          ##
+@client.command()                                           ##
+async def whoip(ctx, *args):                                ##
+    for x in range(1):                                      ##
+        try:                                                ##
+            domain = whois.query(args[0])                   ##
+            domain = domain.__dict__                        ##
+            embed = discord.Embed(
+                title = "WhoIs",
+                description = f"This is the gathered info about your domain. `{domain['name']}`\n   Registrar   :   `{domain['registrar']}`\n   Creation date   :   `{domain['creation_date']}`\n   Expiration date   :   `{domain['expiration_date']}`\n   Last updated   :   `{domain['last_updated']}`\n   Server names   :   `{domain['name_servers']}`",   
+                colour = discord.Colour.blue()              ##
+                )                                           ##
+            embed.set_footer(text = "Queries Whois servers.")#
+            await ctx.send(embed = embed)                   ##
+        except:
+            embed = discord.Embed(
+                title = "Cancelled",
+                description = f"`{args[0]}` is not a valid domain.",   
+                colour = discord.Colour.blue()              ##
+                )                                           ##
+            await ctx.send(embed = embed)                   ##
+            break                                           ##
 ##############################################################
 
 ##############################################################
@@ -344,8 +368,7 @@ async def settings(ctx, *args):                             ##
 ##############################################################
 
 ##############################################################
-##                                                          ##
-##                                                          ##
+##              Display commands for settings.              ##
 async def settings_help(ctx):                               ##
     title = "Settings help"                                 ##
     description = f"These are the commands you can use;\n   `{command_prefix}settings prefix [new prefix]' : Change the current bot prefix.\n   `{command_prefix}"
@@ -353,8 +376,7 @@ async def settings_help(ctx):                               ##
 ##############################################################
 
 ##############################################################
-##                                                          ##
-##                                                          ##
+##       Makes it easier to send embedded messages          ##
 async def discord_embed_send(ctx, title, description):      ##
     embed = discord.Embed(
         title = title,
@@ -365,8 +387,7 @@ async def discord_embed_send(ctx, title, description):      ##
 ##############################################################
 
 ##############################################################
-##                                                          ##
-##                                                          ##
+##                Edit the config.json                      ##
 def settings_edit(variable_name, value):                    ##
     with open('config.json', 'r+') as f:                    ##
         data = json.load(f)                                 ##
