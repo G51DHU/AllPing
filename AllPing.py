@@ -3,21 +3,20 @@
 #######################
 import discord
 from discord.ext import commands
-import time
 import os
 import asyncio
+import time
 import datetime
 import json
 import whois
-
+import nmap
 
 #######################
 ##      Variables    ##
 #######################
 numbers = ["0","1","2","3","4","5","6","7","8","9","10","11"]
 counter = 0
-shortcut_list = []
-
+shortcut_list= []
 
 ###################################
 ##     primary initialisation    ##
@@ -34,7 +33,7 @@ downtime_channel = data["downtime_channel"]
 downtime_hostname = data["downtime_hostname"]
 bot_token = data["bot_token"]
 on_ready_channel = data["on_ready_channel"]
-for x in shortcut_hostnames:
+for _ in shortcut_hostnames:
     shortcut_list.append(str(counter))
     counter = counter + 1
 print(f"short cut list contents;\n  {shortcut_list}")
@@ -194,7 +193,7 @@ async def downtime_handler():                               ##
 ##                                                          ##
 @client.command()                                           ##
 async def whoip(ctx, *args):                                ##
-    for x in range(1):                                      ##
+    for _ in range(1):                                      ##
         try:                                                ##
             domain = whois.query(args[0])                   ##
             domain = domain.__dict__                        ##
@@ -216,13 +215,37 @@ async def whoip(ctx, *args):                                ##
 ##############################################################
 
 ##############################################################
+@client.command()                                            #
+async def scan(ctx, *args):                                  #
+    nm = nmap.PortScanner()
+    if len(args) >= 2:
+        port_range = args[-1]
+        host_names = args[:-1]
+        host_names = ' '.join(host_names)
+        print(host_names)
+        print(port_range)
+        nm.scan(host_names, port_range)
+        for host in nm.all_hosts():
+            await ctx.send('----------------------------------------------------')
+            await ctx.send(f'Host : {host} ({nm[host].hostname()})')
+            await ctx.send(f'State : {nm[host].state()}')
+            for proto in nm[host].all_protocols():
+                await ctx.send('----------')
+                await ctx.send(f'Protocol : {proto}')
+                lport = sorted(nm[host][proto].keys())
+                for port in lport:
+                    await ctx.send(f"port: {port}\tstate: {nm[host][proto][port]['state']}")
+        print(nm.command_line())
+##############################################################
+
+##############################################################
 ##                                                          ##
 @client.command()                                           ##
 async def settings(ctx, *args):                             ##
     global command_prefix                                   ##
     global downtime_channel                                 ##
     global downtime_hostname                                ##
-    global shortcut_hostnames                               ##
+    global shortcut_hostnames                                ##
     if len(args) == 0:                                      ##
         title = "Please enter a valid command"              ##
         description = ""                                    ##
@@ -303,7 +326,7 @@ async def settings(ctx, *args):                             ##
     elif args[0] == "shortcut_names" or args[0] == "4":
         if len(args) == 1: 
             title = "Add or Edit shorcut names?"
-            description = f"These are your current shortcuts, for the `{command_prefix}ping` command.\n     {shortcut_hostnames}\n-  Please note;\n  Each hostname, is numerically assigned a value, based on the order you have given them. Values from `0` onwards.\nDo you want to add a new hostname or edit a current one??\n   Enter for `1` add or `2` for edit."
+            description = f"These are your current shortcuts, for the `{command_prefix}ping` command.\n     {shortcut_hostnames}\n  Please note;\n  Each hostname, is numerically assigned a value, based on the order you have given them. Values from `0` onwards.\nDo you want to add a new hostname or edit a current one??\n   Enter for `1` add or `2` for edit."
             await discord_embed_send(ctx, title, description)
             ynconfirm = await client.wait_for('message', timeout=10)
             if ynconfirm.content == "1":
@@ -322,7 +345,7 @@ async def settings(ctx, *args):                             ##
                     shortcut_hostnames.append(new_hostname)
                     settings_edit("shortcut_hostnames", shortcut_hostnames)
                     title = "Confirmed"
-                    description = "Shortcut_hostnames has been added."
+                    description = "Shortcut_hostnames has been updated."
                     await discord_embed_send(ctx, title, description)
                 else:
                     title = "Cancelled"
