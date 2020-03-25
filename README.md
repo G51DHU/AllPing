@@ -1,6 +1,5 @@
 # AllPing
 The AllPing discord bot is intented to become an easy way to ping, ssh, portscan, and recieve info about domains. All from the comfort of discord.
-In the future, integration with Rhasspy, Alexa and Google may be avaliable.
 
 Current ability of AllPing;
      Check hostnames for downtime.
