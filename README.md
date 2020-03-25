@@ -13,9 +13,9 @@ In order to use the script, please set up your own bot, through the discord webs
 To cancel downtime alert's currently, you have to restart the bot.
 
 Make sure you "pip install" the following;
-     Discord
-     whois
-     nmap
+     Discord,
+     whois,
+     nmap.
 
 Also install the nmap software for the "nmap" python module to drive.
 
