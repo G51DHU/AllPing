@@ -117,7 +117,6 @@ async def ping(ctx, *args):                                 ##
                 await ctx.send("You have not saved a shortcut.")
         else:                                               ##
             print(hostname)                                 ##
-            print("no")
             await ping_handler(ctx, hostname)               ##
                                                             ##
 ##   Is person sends a valid URL, it will be pinged,        ##
@@ -192,50 +191,77 @@ async def downtime_handler():                               ##
 ##       Display info about domains using WHOIS servers     ##
 ##                                                          ##
 @client.command()                                           ##
-async def whoip(ctx, *args):                                ##
-    for _ in range(1):                                      ##
-        try:                                                ##
-            domain = whois.query(args[0])                   ##
-            domain = domain.__dict__                        ##
-            embed = discord.Embed(
-                title = "WhoIs",
-                description = f"This is the gathered info about your domain. `{domain['name']}`\n   Registrar   :   `{domain['registrar']}`\n   Creation date   :   `{domain['creation_date']}`\n   Expiration date   :   `{domain['expiration_date']}`\n   Last updated   :   `{domain['last_updated']}`\n   Server names   :   `{domain['name_servers']}`",   
-                colour = discord.Colour.blue()              ##
-                )                                           ##
-            embed.set_footer(text = "Queries Whois servers.")#
-            await ctx.send(embed = embed)                   ##
-        except:
-            embed = discord.Embed(
-                title = "Cancelled",
-                description = f"`{args[0]}` is not a valid domain.",   
-                colour = discord.Colour.blue()              ##
-                )                                           ##
-            await ctx.send(embed = embed)                   ##
-            break                                           ##
+async def who(ctx, *args):                                ##
+#    for _ in range(1):                                      ##
+    try:                                                ##
+        domain = whois.query(args[0])                   ##
+        domain = domain.__dict__                        ##
+        embed = discord.Embed(
+            title = "WhoIs",
+            description = f"This is the gathered info about your domain. `{domain['name']}`\n   Registrar   :   `{domain['registrar']}`\n   Creation date   :   `{domain['creation_date']}`\n   Expiration date   :   `{domain['expiration_date']}`\n   Last updated   :   `{domain['last_updated']}`\n   Server names   :   `{domain['name_servers']}`",   
+            colour = discord.Colour.blue()
+            )                                           ##
+        embed.set_footer(text = "Queries Whois servers.")#
+        await ctx.send(embed = embed)                   ##
+    except:
+        embed = discord.Embed(
+            title = "Cancelled",
+            description = f"`{args[0]}` is not a valid domain.",   
+            colour = discord.Colour.blue()              ##
+            )                                           ##
+        await ctx.send(embed = embed)                   ##
 ##############################################################
 
 ##############################################################
 @client.command()                                            #
 async def scan(ctx, *args):                                  #
+    async def scan_embed_info(port_range, host_names):
+        nm.scan(host_names, port_range) 
+        for host in nm.all_hosts():
+            await asyncio.sleep(0.001)
+            host_info = f"`Host`   :   {host} ({nm[host].hostname()})\n`State` : {nm[host].state()}"
+            embed = discord.Embed(
+                title = "Port Scan",
+                description = f"{host_info}"
+                )
+            message = await ctx.send(embed = embed)
+            for proto in nm[host].all_protocols():
+                counter = 0
+                lport = sorted(nm[host][proto].keys())
+                protocol_info = f"`Protocol`   :   {proto}\n--------------------------"
+                for port in lport:
+                    port_info1 = {}
+                    counter = counter + 1
+                    scanned_port = f"`Port`   :   `{port}`\n   `State`   :   {nm[host][proto][port]['state']}"
+                    port_info = nm[host].tcp(port)
+                    for k, v in port_info.items():
+                        if v != "" and k != "state" and k != "reason":
+                            port_info1.update({k:v})
+                    print(port_info1)
+                    if counter == 1:
+                        description1 = f"{host_info}\n{protocol_info}\n{scanned_port}\n{port_info1}"
+                        embed1 = discord.Embed(
+                            title = "Port scan",
+                            description = f"{description1}"
+                        )
+                        await message.edit(embed = embed1)
+                        await asyncio.sleep(0.01)
+                    elif counter != 1:
+                        description1  = f"{description1}\n-\n{scanned_port}\n{port_info1}"
+                        embed = discord.Embed(
+                            title = "Port scan",
+                            description = f"{description1}"
+                        )
+                        await message.edit(embed = embed)
+                        await asyncio.sleep(0.01)
     nm = nmap.PortScanner()
-    if len(args) >= 2:
+    if len(args) == 2:
         port_range = args[-1]
         host_names = args[:-1]
         host_names = ' '.join(host_names)
         print(host_names)
         print(port_range)
-        nm.scan(host_names, port_range)
-        for host in nm.all_hosts():
-            await ctx.send('----------------------------------------------------')
-            await ctx.send(f'Host : {host} ({nm[host].hostname()})')
-            await ctx.send(f'State : {nm[host].state()}')
-            for proto in nm[host].all_protocols():
-                await ctx.send('----------')
-                await ctx.send(f'Protocol : {proto}')
-                lport = sorted(nm[host][proto].keys())
-                for port in lport:
-                    await ctx.send(f"port: {port}\tstate: {nm[host][proto][port]['state']}")
-        print(nm.command_line())
+        await client.loop.create_task(scan_embed_info(port_range,host_names))
 ##############################################################
 
 ##############################################################
