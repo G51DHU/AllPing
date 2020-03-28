@@ -1,8 +1,9 @@
 #######################
 ##      Imports      ##
-#######################
+####################### 
 import discord
 from discord.ext import commands
+from discord.utils import get
 import os
 import asyncio
 import time
@@ -10,10 +11,13 @@ import datetime
 import json
 import whois
 import nmap
+from pexpect import pxssh
+import getpass
 
 #######################
 ##      Variables    ##
 #######################
+
 numbers = ["0","1","2","3","4","5","6","7","8","9","10","11"]
 counter = 0
 shortcut_list= []
@@ -38,6 +42,8 @@ for _ in shortcut_hostnames:
     counter = counter + 1
 print(f"short cut list contents;\n  {shortcut_list}")
 print(f"Shortcut names;\n  {shortcut_hostnames}")
+
+commands_list = {f"{command_prefix}ping",f"{command_prefix}who",f"{command_prefix}settings",f"{command_prefix}scan",f"{command_prefix}info",f"{command_prefix}help",f"{command_prefix}downtime",f"{command_prefix}ssh"}
 
 
 #####################################
@@ -68,7 +74,7 @@ async def info(ctx):                                      ##
     member = await client.fetch_user(679014352019521546)  ##
     embed = discord.Embed(
         title = "Allping",
-        description =f"Hello! I'm a bot called 'AllPing'. I can do cool network admin things like, pinging, viewing domain status, checking host downtime and ssh.\n\n`Creator` : Linux_Is_Nobody#3940\n`My name` : {member.mention}\n`My prefix` : {command_prefix}\n`Version` : This is version V3.75 alpha",
+        description =f"Hello! I'm a bot called 'AllPing'. I can do cool network admin things like, pinging, viewing domain status, checking host downtime and ssh.\n\n`Creator` : Linux_Is_Nobody#3940\n`My name` : {member.mention}\n`My prefix` : {command_prefix}\n`Version` : This is version V3.9 alpha",
         colour = discord.Colour.blue(),
         timestamp=datetime.datetime.utcnow()
     )                                                     ##
@@ -191,78 +197,194 @@ async def downtime_handler():                               ##
 ##       Display info about domains using WHOIS servers     ##
 ##                                                          ##
 @client.command()                                           ##
-async def who(ctx, *args):                                ##
-#    for _ in range(1):                                      ##
-    try:                                                ##
-        domain = whois.query(args[0])                   ##
-        domain = domain.__dict__                        ##
+async def who(ctx, *args): 
+    try:                                 ##                                                   ##
+        domain = whois.query(args[0])                       ##
+        domain = domain.__dict__                            ##
         embed = discord.Embed(
             title = "WhoIs",
             description = f"This is the gathered info about your domain. `{domain['name']}`\n   Registrar   :   `{domain['registrar']}`\n   Creation date   :   `{domain['creation_date']}`\n   Expiration date   :   `{domain['expiration_date']}`\n   Last updated   :   `{domain['last_updated']}`\n   Server names   :   `{domain['name_servers']}`",   
             colour = discord.Colour.blue()
-            )                                           ##
-        embed.set_footer(text = "Queries Whois servers.")#
-        await ctx.send(embed = embed)                   ##
+            )                                               ##
+        embed.set_footer(text = "Queries Whois servers.")   ##
+        await ctx.send(embed = embed)                       ##
     except:
         embed = discord.Embed(
             title = "Cancelled",
             description = f"`{args[0]}` is not a valid domain.",   
             colour = discord.Colour.blue()              ##
-            )                                           ##
-        await ctx.send(embed = embed)                   ##
+            )                                               ##
+        await ctx.send(embed = embed)                       ##
 ##############################################################
 
 ##############################################################
 @client.command()                                            #
 async def scan(ctx, *args):                                  #
-    async def scan_embed_info(port_range, host_names):
-        nm.scan(host_names, port_range) 
-        for host in nm.all_hosts():
-            await asyncio.sleep(0.001)
-            host_info = f"`Host`   :   {host} ({nm[host].hostname()})\n`State` : {nm[host].state()}"
-            embed = discord.Embed(
-                title = "Port Scan",
-                description = f"{host_info}"
-                )
-            message = await ctx.send(embed = embed)
-            for proto in nm[host].all_protocols():
-                counter = 0
-                lport = sorted(nm[host][proto].keys())
-                protocol_info = f"`Protocol`   :   {proto}\n--------------------------"
-                for port in lport:
-                    port_info1 = {}
-                    counter = counter + 1
-                    scanned_port = f"`Port`   :   `{port}`\n   `State`   :   {nm[host][proto][port]['state']}"
-                    port_info = nm[host].tcp(port)
-                    for k, v in port_info.items():
-                        if v != "" and k != "state" and k != "reason":
-                            port_info1.update({k:v})
-                    print(port_info1)
-                    if counter == 1:
-                        description1 = f"{host_info}\n{protocol_info}\n{scanned_port}\n{port_info1}"
-                        embed1 = discord.Embed(
-                            title = "Port scan",
-                            description = f"{description1}"
-                        )
-                        await message.edit(embed = embed1)
-                        await asyncio.sleep(0.01)
-                    elif counter != 1:
-                        description1  = f"{description1}\n-\n{scanned_port}\n{port_info1}"
-                        embed = discord.Embed(
-                            title = "Port scan",
-                            description = f"{description1}"
-                        )
-                        await message.edit(embed = embed)
-                        await asyncio.sleep(0.01)
-    nm = nmap.PortScanner()
+    await asyncio.sleep(0.01)
     if len(args) == 2:
         port_range = args[-1]
         host_names = args[:-1]
         host_names = ' '.join(host_names)
         print(host_names)
         print(port_range)
-        await client.loop.create_task(scan_embed_info(port_range,host_names))
+        await asyncio.sleep(0.01)
+        await scan_embed_info(ctx, port_range, host_names)
+
+def wrap_scan(host_names, port_range):
+    nm = nmap.PortScanner()
+    nm.scan(host_names, port_range)
+    return nm
+
+async def scan_embed_info(ctx, port_range, host_names):
+    await asyncio.sleep(0.01)
+    nm = await client.loop.run_in_executor(None, wrap_scan, host_names, port_range)
+    for host in nm.all_hosts():
+        host_info = f"`Host`   :   {host} ({nm[host].hostname()})\n`State` : {nm[host].state()}"
+        embed = discord.Embed(
+            title = "Port Scan",
+            description = f"{host_info}"
+            )
+        message = await ctx.send(embed = embed)
+        await asyncio.sleep(0.01)
+        for proto in nm[host].all_protocols():
+            counter = 0
+            lport = sorted(nm[host][proto].keys())
+            protocol_info = f"`Protocol`   :   {proto}\n--------------------------"
+            await asyncio.sleep(0.01)
+            for port in lport:
+                port_info1 = {}
+                counter = counter + 1
+                scanned_port = f"`Port`   :   `{port}`\n   `State`   :   {nm[host][proto][port]['state']}"
+                port_info = nm[host].tcp(port)
+                await asyncio.sleep(0.01)
+                for k, v in port_info.items():
+                    if v != "" and k != "state" and k != "reason":
+                        port_info1[k]= v
+                    await asyncio.sleep(0.01)
+                print(port_info1)
+                if counter == 1:
+                    description1 = f"{host_info}\n{protocol_info}\n{scanned_port}\n{port_info1}"
+                    embed1 = discord.Embed(
+                        title = "Port scan",
+                        description = f"{description1}"
+                    )
+                    await message.edit(embed = embed1)
+                    await asyncio.sleep(0.01)
+                elif counter != 1:
+                    description1  = f"{description1}\n-\n{scanned_port}\n{port_info1}"
+                    embed = discord.Embed(
+                        title = "Port scan",
+                        description = f"{description1}"
+                    )
+                    await message.edit(embed = embed)
+                    await asyncio.sleep(0.01)
+                    
 ##############################################################
+@client.command()
+async def ssh(ctx,*args):
+    orig_author_id = ctx.author.id
+    command = ""
+    session_num = 0
+    channel_num = 0
+    role_num = 0
+    blind = False
+    user = ctx.author
+    embed = discord.Embed(
+        title = "SSH",
+        description = "Are you sure you want to start an SSH session?\n y = yes\n n = no"
+    )
+    await ctx.send(embed = embed)
+    ynconfirm = await client.wait_for('message')
+    while ynconfirm.author.id != orig_author_id and ynconfirm.content in commands_list: 
+        ynconfirm = await client.wait_for('message')
+    if ynconfirm == "y" or "yes":
+        guild = ctx.message.guild
+        for channel in guild.channels:
+            channel = str(channel)
+            if "ssh_private" in channel:
+                channel_num = channel_num + 1
+        roles = await guild.fetch_roles()
+        for role in roles:
+            role = str(role)
+            if "ssh_private" in role: 
+                role_num = role_num + 1
+            if "blind" in role:
+                blind = True
+                role = get(ctx.guild.roles, name="blind")
+                await user.add_roles(role)
+        if blind == True:
+            if role_num > channel_num:
+                session_num = role_num
+            elif channel_num > role_num:
+                session_num = channel_num
+            elif channel_num == role_num:
+                session_num = channel_num
+                session_num = str(session_num)
+            session_role = await guild.create_role(name = f'ssh_private{session_num}')
+            await user.add_roles(session_role)
+            overwrites = {
+                guild.default_role: discord.PermissionOverwrite(read_messages=False,send_messages=False,send_tts_messages=False,read_message_history=False,),
+                guild.me: discord.PermissionOverwrite(read_messages=True),
+                user: discord.PermissionOverwrite(read_messages=True,send_messages=True),
+                session_role: discord.PermissionOverwrite(read_messages=True,send_messages=True)
+                }
+            await guild.create_text_channel(f'ssh_private{session_num}', reason="SSH", overwrites=overwrites)
+            channel = get(ctx.guild.channels, name=f"ssh_private{session_num}")
+            title = "SSH"
+            description = (f"You have been put into a session.\n please enter '`{command_prefix}/exit`' to exit the session."
+                "Please enter your username and hostname. [user]@[hostname]")
+            await discord_embed_send(channel,title,description)
+
+            login = await client.wait_for("message")
+            while login.author.id != orig_author_id and login.content in commands_list:
+                login = await client.wait_for("message")
+            login = login.content
+            print(login)
+
+            await ssh_connect(orig_author_id, channel, login, command)
+        elif blind == False:
+            embed = discord.Embed(
+                title = "SSH",
+                description = "You do not have the 'blind' role in your server."
+            )
+            await ctx.send(embed=embed)
+    else:
+        embed = discord.Embed(
+            title = "SSH",
+            description = "Cancelled"
+        )
+        await ctx.send(embed = embed)
+
+async def ssh_connect(orig_author_id, channel, login, command):
+    try:
+        login = login.split("@")
+        command = ""
+        s = pxssh.pxssh()
+        hostname = login[1]
+        username = login[0]
+        await channel.send("Enter the password.")
+        password = await client.wait_for("message")
+        while password.author.id != orig_author_id and password.content in commands_list:
+            password = await client.wait_for("message")
+        password = password.content 
+        s.login(hostname, username, password)
+        while command != "exit()":
+            try:
+                await channel.send("Enter a command.")
+                command = await client.wait_for("message")
+                while command.author.id != orig_author_id and command.content in commands_list:
+                    command = await client.wait_for("message")
+                command = command.content
+                s.sendline(command)
+                s.prompt()  
+                await channel.send(s.before)  
+            except:
+                await channel.send("Command not valid.")
+
+        s.logout()
+    except pxssh.ExceptionPxssh as e:
+        await channel.send("pxssh failed on login.")
+        await channel.send(e)
 
 ##############################################################
 ##                                                          ##
@@ -271,7 +393,7 @@ async def settings(ctx, *args):                             ##
     global command_prefix                                   ##
     global downtime_channel                                 ##
     global downtime_hostname                                ##
-    global shortcut_hostnames                                ##
+    global shortcut_hostnames                               ##
     if len(args) == 0:                                      ##
         title = "Please enter a valid command"              ##
         description = ""                                    ##
